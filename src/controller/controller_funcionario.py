@@ -1,16 +1,15 @@
 from model.funcionario import Funcionario
-from conexion.oracle_queries import OracleQueries
+from conexion.mongo_queries import MongoQueries
 
 def _esc(s: str) -> str:
     return str(s).replace("'", "''")
 
 class Controller_Funcionario:
     def __init__(self):
-        pass
+        self.mongo = MongoQueries()
 
     def inserir_funcionario(self) -> Funcionario | None:
-        oracle = OracleQueries(can_write=True)
-        oracle.connect()
+        self.mongo.connect()
 
         nome = _esc(input("Nome: ").strip())
         cpf  = _esc(input("CPF (somente números): ").strip())
@@ -48,8 +47,7 @@ class Controller_Funcionario:
         return novo
 
     def atualizar_funcionario(self) -> Funcionario | None:
-        oracle = OracleQueries(can_write=True)
-        oracle.connect()
+        self.mongo.connect()
 
         id_func = int(input("ID do Funcionário que irá alterar: "))
 
@@ -88,8 +86,7 @@ class Controller_Funcionario:
             return None
 
     def excluir_funcionario(self) -> None:
-        oracle = OracleQueries(can_write=True)
-        oracle.connect()
+        self.mongo.connect
 
         id_func = int(input("ID do Funcionário que irá excluir: "))
 
