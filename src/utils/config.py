@@ -7,42 +7,23 @@ MENU_PRINCIPAL = """Menu Principal
 """
 
 MENU_RELATORIOS = """Relatórios
-1 - Relatório de Pedidos por Fornecedores
-2 - Relatório de Pedidos
-3 - Relatório de Produtos
-4 - Relatório de Clientes
-5 - Relatório de Fornecedores
-6 - Relatório de Itens de Pedidos
+1 - Relatório de Funcionários
+2 - Relatório de Marcações de ponto
+3 - Relatório de Marcações de ponto por Funcionários
 0 - Sair
 """
 
 MENU_ENTIDADES = """Entidades
-1 - PRODUTOS
-2 - CLIENTES
-3 - FORNECEDORES
-4 - PEDIDOS
-5 - ITENS DE PEDIDOS
+1 - MARCAÇÕES
+2 - FUNCIONÁRIOS
+0 - Sair
 """
 
-# Consulta de contagem de registros por tabela
-def query_count(collection_name):
-   from conexion.mongo_queries import MongoQueries
-   import pandas as pd
+# Consulta de contagem com schema explícito e alias configurável
+# Use com: QUERY_COUNT.format(alias="total_marcacoes", table="MARCACOES")
+QUERY_COUNT = "SELECT COUNT(1) AS {alias} FROM LABDATABASE.{table}"
 
-   mongo = MongoQueries()
-   mongo.connect()
-
-   my_collection = mongo.db[collection_name]
-   total_documentos = my_collection.count_documents({})
-   mongo.close()
-   df = pd.DataFrame({f"total_{collection_name}": [total_documentos]})
-   return df
-
-def clear_console(wait_time:int=3):
-    '''
-       Esse método limpa a tela após alguns segundos
-       wait_time: argumento de entrada que indica o tempo de espera
-    '''
+def clear_console(wait_time: int = 3):
     import os
     from time import sleep
     sleep(wait_time)
