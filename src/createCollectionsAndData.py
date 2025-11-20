@@ -1,58 +1,103 @@
+
 import logging
-from conexion.mongo_queries import MongoQueries
-from conexion.oracle_queries import OracleQueries
 import json
 
-LIST_OF_COLLECTIONS = ["fornecedores", "clientes", "produtos", "pedidos", "itens_pedido"]
-logger = logging.getLogger(name="Example_CRUD_MongoDB")
+import pandas as pd
+
+from conexion.mongo_queries import MongoQueries
+from conexion.oracle_queries import OracleQueries
+
+LIST_OF_COLLECTIONS = ["funcionarios", "marcacoes"] # listas de coleções a serem criadas
+
+logger = logging.getLogger(name="SistemaPonto_Mongo_Migration")
 logger.setLevel(level=logging.WARNING)
+
 mongo = MongoQueries()
 
-def createCollections(drop_if_exists:bool=False):
-    """
-        Lista as coleções existentes, verificar se as coleções padrão estão entre as coleções existentes.
-        Caso exista e o parâmetro de exclusão esteja configurado como True, irá apagar a coleção e criar novamente.
-        Caso não exista, cria a coleção.
-        
-        Parameter:
-                  - drop_if_exists: True  -> apaga a tabela existente e recria
-                                    False -> não faz nada
-    """
+
+def createCollections(drop_if_exists: bool = False):
     mongo.connect()
     existing_collections = mongo.db.list_collection_names()
+
     for collection in LIST_OF_COLLECTIONS:
-        if collection in existing_collections:
+        if collection in existing_collections: 
             if drop_if_exists:
                 mongo.db.drop_collection(collection)
-                logger.warning(f"{collection} droped!")
+                logger.warning(f"{collection} droped!") # se existir, apaga
                 mongo.db.create_collection(collection)
-                logger.warning(f"{collection} created!")
+                logger.warning(f"{collection} created!") # cria nova coleção
         else:
             mongo.db.create_collection(collection)
-            logger.warning(f"{collection} created!")
+            logger.warning(f"{collection} created!") 
+
     mongo.close()
 
-def insert_many(data:json, collection:str):
+
+def insert_many(data: list[dict], collection: str):
     mongo.connect()
     mongo.db[collection].insert_many(data)
     mongo.close()
 
+
 def extract_and_insert():
     oracle = OracleQueries()
     oracle.connect()
-    sql = "select * from labdatabase.{table}"
+
     for collection in LIST_OF_COLLECTIONS:
-        df = oracle.sqlToDataFrame(sql.format(table=collection))
-        if collection == "pedidos":
-            df["data_pedido"] = df["data_pedido"].dt.strftime("%m-%d-%Y")
-        logger.warning(f"data extracted from database Oracle labdatabase.{collection}")
+        sql = f"SELECT * FROM labdatabase.{collection}"
+        df = oracle.sqlToDataFrame(sql)
+
+        logger.warning(f"Data extracted from Oracle labdatabase.{collection}")
+
+        if collection == "funcionarios":
+            mapping = {
+                "CODIGO_FUNCIONARIO": "id_func",
+                "NOME": "nome",
+                "CPF": "cpf",
+                "CARGO": "cargo",
+            }
+            # Renomeia colunas para o padrão Mongo
+            df.rename(columns=mapping, inplace=True)
+
+        elif collection == "marcacoes":
+  
+            mapping = {
+                "CODIGO_MARCACAO": "id_marc",
+                "CODIGO_FUNCIONARIO": "id_func",
+                "DATA_MARCACAO": "data_marc",
+                "HORA_ENTRADA": "hora_entrada",
+                "HORA_SAIDA": "hora_saida",
+                "TIPO": "tipo",
+            }
+            df.rename(columns=mapping, inplace=True)
+
+            # Converte datas/horas para string (caso venham como datetime/time)
+            if "data_marc" in df.columns:
+                try:
+                    df["data_marc"] = df["data_marc"].dt.strftime("%d-%m-%Y")
+                except Exception:
+                    df["data_marc"] = df["data_marc"].astype(str)
+
+            for col in ["hora_entrada", "hora_saida"]:
+                if col in df.columns:
+                    try:
+                        df[col] = df[col].dt.strftime("%H:%M")
+                    except Exception:
+                        df[col] = df[col].astype(str)
+
+        # Mantém apenas colunas minúsculas (padrão Mongo)
+        df = df[[c for c in df.columns if c.islower()]]
+
+       # Converte DataFrame para lista de dicionários (JSON)
         records = json.loads(df.T.to_json()).values()
-        logger.warning("data converted to json")
-        insert_many(data=records, collection=collection)
-        logger.warning(f"documents generated at {collection} collection")
+
+        logger.warning("Data converted to json")
+        insert_many(data=list(records), collection=collection)
+        logger.warning(f"Documents generated at '{collection}' collection")
+
 
 if __name__ == "__main__":
-    logging.warning("Starting")
+    logging.warning("Starting migration for Sistema de Ponto")
     createCollections(drop_if_exists=True)
     extract_and_insert()
-    logging.warning("End")
+    logging.warning("End migration")
