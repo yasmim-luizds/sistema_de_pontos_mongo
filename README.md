@@ -1,8 +1,11 @@
 # Sistema de Controle de Ponto – Python + MongoDB
 
 **Disciplina:** Banco de Dados
+
 **Professor:** Howard Roatti
+
 **Instituição:** FAESA
+
 **Última atualização:** Novembro/2025
 
 **Integrantes:** Hellen Karla Costa, Júlia Ogassavara, Yasmim Luiz
