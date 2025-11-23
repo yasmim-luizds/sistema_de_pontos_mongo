@@ -1,131 +1,131 @@
-# Exemplo de Sistema em Python fazendo CRUD no MongoDB
+# Sistema de Controle de Ponto – Python + MongoDB
 
-Esse sistema de exemplo é composto por um conjunto de coleções(collections) que representam pedidos de vendas, contendo coleções como: clientes, fornecedores, produtos, pedidos e itens de pedido.
+**Disciplina:** Banco de Dados
+**Professor:** Howard Roatti
+**Instituição:** FAESA
+**Última atualização:** Novembro/2025
 
-O sistema exige que as coleções existam, então basta executar o script Python a seguir para criação das coleções e preenchimento de dados de exemplos:
-```shell
-~$ python createCollectionsAndData.py
-```
-**Atenção: tendo em vista que esse projeto é continuidade do [example_crud_oracle](https://github.com/howardroatti/example_crud_oracle), é importante que as tabelas do Oracle existam e estejam preenchidas, pois o script _createCollectionsAndData.py_ irá realizar uma consulta em cada uma das tabelas e preencher as _collections_ com os novos _documents_.**
+**Integrantes: Hellen Karla Costa, Júlia Ogassavara e Yasmim Luiz**
+**Turma: 4SC1**
 
-Para executar o sistema basta executar o script Python a seguir:
-```shell
-~$ python principal.py
-```
+---
+## Descrição do Projeto
 
-## Organização
-- [diagrams](diagrams): Nesse diretório está o [diagrama relacional](diagrams/DIAGRAMA_RELACIONAL_PEDIDOS.pdf) (lógico) do sistema.
-    * O sistema possui cinco entidades: PRODUTOS, CLIENTES, FORNECEDORES, PEDIDOS e ITENS_PEDIDO
-- [src](src): Nesse diretório estão os scripts do sistema
-    * [conexion](src/conexion): Nesse repositório encontra-se o [módulo de conexão com o banco de dados Oracle](src/conexion/oracle_queries.py) e o [módulo de conexão com o banco de dados Mongo](src/conexion/mongo_queries.py). Esses módulos possuem algumas funcionalidades úteis para execução de instruções. O módulo do Oracle permite obter como resultado das queries JSON, Matriz e Pandas DataFrame. Já o módulo do Mongo apenas realiza a conexão, os métodos CRUD e de recuperação de dados são implementados diretamente nos objetos controladores (_Controllers_) e no objeto de Relatório (_reports_).
-      - Exemplo de utilização para consultas simples no Oracle:
+O **Sistema de Controle de Ponto** tem como objetivo registrar as marcações de entrada e saída dos funcionários, calcular jornadas de trabalho, controlar atrasos/faltas e gerar relatórios de presença e banco de horas.
 
-        ```python
-        def listar_clientes(self, oracle:OracleQueries, need_connect:bool=False):
-            query = """
-                    select c.cpf
-                        , c.nome 
-                    from clientes c
-                    order by c.nome
-                    """
-            if need_connect:
-                oracle.connect()
-            print(oracle.sqlToDataFrame(query))
-        ```
-      - Exemplo de utilização para alteração de registros no Oracle
+Nesta versão, o projeto foi adaptado para utilizar o **MongoDB** como banco de dados **NoSQL**, mantendo o mesmo modelo conceitual da versão anterior em **Oracle**.Além disso, existe um script de **migração de dados** que lê as tabelas LABDATABASE.FUNCIONARIOS e LABDATABASE.MARCACOES no Oracle e grava os documentos equivalentes nas coleções funcionarios e marcacoes no MongoDB.
 
-        ```python
-        from conexion.oracle_queries import OracleQueries
-        def inserir_cliente(self) -> Cliente:
-            # Cria uma nova conexão com o banco que permite alteração
-            oracle = OracleQueries(can_write=True)
-            oracle.connect()
+O sistema implementa operações de **consulta, inserção, atualização e remoção** sobre as entidades **Funcionário** e **Marcação**, além de relatórios baseados em **agregação** (pipeline) do MongoDB, equivalentes aos relatórios com GROUP BY e JOIN da versão relacional.
 
-            # Solicita ao usuario o novo CPF
-            cpf = input("CPF (Novo): ")
+---
+## Requisitos do Ambiente
 
-            if self.verifica_existencia_cliente(oracle, cpf):
-                # Solicita ao usuario o novo nome
-                nome = input("Nome (Novo): ")
-                # Insere e persiste o novo cliente
-                oracle.write(f"insert into clientes values ('{cpf}', '{nome}')")
-                # Recupera os dados do novo cliente criado transformando em um DataFrame
-                df_cliente = oracle.sqlToDataFrame(f"select cpf, nome from clientes where cpf = '{cpf}'")
-                # Cria um novo objeto Cliente
-                novo_cliente = Cliente(df_cliente.cpf.values[0], df_cliente.nome.values[0])
-                # Exibe os atributos do novo cliente
-                print(novo_cliente.to_string())
-                # Retorna o objeto novo_cliente para utilização posterior, caso necessário
-                return novo_cliente
-            else:
-                print(f"O CPF {cpf} já está cadastrado.")
-                return None
-        ```
-      - Caso esteja utilizando na máquina virtual antiga, você precisará alterar o método connect de:
-          ```python
-          self.conn = cx_Oracle.connect(user=self.user,
-                                  password=self.passwd,
-                                  dsn=self.connectionString()
-                                  )
-          ```
-        Para:
-          ```python
-          self.conn = cx_Oracle.connect(user=self.user,
-                                  password=self.passwd,
-                                  dsn=self.connectionString(in_container=True)
-                                  )
-          ```
-      - Exemplo de utilização para conexão no Mongo;
-      ```python
-            # Importa o módulo MongoQueries
-            from conexion.mongo_queries import MongoQueries
-            
-            # Cria o objeto MongoQueries
-            mongo = MongoQueries()
+### Software Necessário
 
-            # Realiza a conexão com o Mongo
-            mongo.connect()
+**Python 3.10+** instalado no sistema;    
+**MongoDB** instalado e em execução (padrão: localhost:27017);    
+*   requirements.txt   
+*   (Opcional – para migração):   
+    - **Banco de Dados Oracle** acessível;
+    - **Oracle Instant Client** configurado; 
+     Usuário/schema LABDATABASE com as tabelas FUNCIONARIOS e MARCACOES.
+        
+### Instalação das Dependências
 
-            """<inclua aqui suas declarações>"""
+No diretório raiz do projeto:
+`   python3 -m venv .venv  source .venv/bin/activate  pip install -r requirements.txt   `
 
-            # Fecha a conexão com o Mong
-            mongo.close()
-      ```
-      - Exemplo de criação de um documento no Mongo:
-      ```python
-            from conexion.mongo_queries import MongoQueries
-            import pandas as pd
-            
-            # Cria o objeto MongoQueries
-            mongo = MongoQueries()
+Para sair do ambiente virtual depois:
+`  deactivate   `
 
-            # Realiza a conexão com o Mongo
-            mongo.connect()
+---
+## Estrutura do Projeto
 
-            # Solicita ao usuario o novo CPF
-            cpf = input("CPF (Novo): ")
-            # Solicita ao usuario o novo nome
-            nome = input("Nome (Novo): ")
-            # Insere e persiste o novo cliente
-            mongo.db["clientes"].insert_one({"cpf": cpf, "nome": nome})
-            # Recupera os dados do novo cliente criado transformando em um DataFrame
-            df_cliente = pd.DataFrame(list(mongo.db["clientes"].find({"cpf":f"{cpf}"}, {"cpf": 1, "nome": 1, "_id": 0})))
-            # Exibe os dados do cliente em formato DataFrame
-            print(df_cliente)
+├── src/
+│   ├── conexion/
+│   │   ├── mongo_queries.py          # Classe MongoQueries (conexão MongoDB)
+│   │   └── oracle_queries.py         # Classe OracleQueries (usada na migração)
+│   ├── controller/
+│   │   ├── controller_funcionario.py # Regras e operações de Funcionário
+│   │   └── controller_marcacao.py    # Regras e operações de Marcação de ponto
+│   ├── model/
+│   │   ├── funcionario.py            # Classe de domínio Funcionário
+│   │   └── marcacao.py               # Classe de domínio Marcação
+│   ├── reports/
+│   │   └── relatorios.py             # Relatórios em cima das coleções MongoDB
+│   ├── utils/
+│   │   ├── config.py                 # Menus, textos e utilidades gerais
+│   │   └── splash_screen.py          # Tela inicial (totais de registros)
+│   ├── createCollectionsAndData.py   # Migração Oracle → Mongo (coleções + dados)
+│   ├── principal.py                  # Ponto de entrada da aplicação (CLI)
+└── README.md
 
-            # Fecha a conexão com o Mong
-            mongo.close()
-      ```
-    * [controller](src/controller/): Nesse diretório encontram-sem as classes controladoras, responsáveis por realizar inserção, alteração e exclusão dos registros das tabelas.
-    * [model](src/model/): Nesse diretório encontram-ser as classes das entidades descritas no [diagrama relacional](diagrams/DIAGRAMA_RELACIONAL_PEDIDOS.pdf)
-    * [reports](src/reports/) Nesse diretório encontra-se a [classe](src/reports/relatorios.py) responsável por gerar todos os relatórios do sistema
-    * [utils](src/utils/): Nesse diretório encontram-se scripts de [configuração](src/utils/config.py) e automatização da [tela de informações iniciais](src/utils/splash_screen.py)
-    * [createCollectionsAndData.py](src/createCollectionsAndData.py): Script responsável por criar as tabelas e registros fictícios. Esse script deve ser executado antes do script [principal.py](src/principal.py) para gerar as tabelas, caso não execute os scripts diretamente no SQL Developer ou em alguma outra IDE de acesso ao Banco de Dados.
-    * [principal.py](src/principal.py): Script responsável por ser a interface entre o usuário e os módulos de acesso ao Banco de Dados. Deve ser executado após a criação das tabelas.
+---
+## Fluxo de Execução – Versão MongoDB
 
-### Bibliotecas Utilizadas
-- [requirements.txt](src/requirements.txt): `pip install -r requirements.txt`
+### 1\. Clonar o repositório
+  ```bash
+   git clone https://github.com/<seu_usuario>/<nome_do_repositorio>.git
+   cd <nome_do_repositorio>
+   ```
+### 2\. Criar/ativar ambiente virtual e instalar dependências
+ ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r src/requirements.txt
+   ```
+    
+### 3\. (Opcional) Migrar dados do Oracle para o MongoDB
+Se o banco Oracle estiver disponível com o schema LABDATABASE e as tabelas já criadas:
 
-## Contato
-- [LinkedIn](https://linkedin.com/in/howardroatti)
-- [E-Mail](mailto:howardcruzroatti@gmail.com)
+1.  Ajustar conexion/passphrase/authentication.oracle com usuário/senha válidos.    
+2.  cd srcpython3 createCollectionsAndData.py
+   
+Este script:
+*   Cria (ou recria) as coleções funcionarios e marcacoes no MongoDB;
+*   Lê os dados de LABDATABASE.FUNCIONARIOS e LABDATABASE.MARCACOES no Oracle;    
+*   Converte os registros para documentos JSON;    
+*   Insere na base MongoDB.    
+
+### 4\. Executar o sistema principal
+Dentro de src/:
+ ```bash
+   python principal.py
+   ```
+
+O sistema abrirá um **menu de linha de comando (CLI)** com opções do tipo:
+*   Relatórios    
+*   Inserir registros  
+*   Atualizar registros    
+*   Remover registros   
+*   Sair    
+
+As operações utilizam os controladores (controller\_funcionario.py e controller\_marcacao.py) para acessar e manipular os dados de funcionários e marcações.
+
+---
+## Exemplo de Uso – MongoQueries
+
+### Consulta simples
+`  from conexion.mongo_queries import MongoQueries  mongo = MongoQueries()  mongo.connect()  # lista de coleções disponíveis no banco configurado  print(mongo.db.list_collection_names())  # exemplo de leitura de todos os funcionários  cursor = mongo.db["funcionarios"].find({})  for doc in cursor:      print(doc)  mongo.close()   `
+
+### Inserção simples
+`  from conexion.mongo_queries import MongoQueries  mongo = MongoQueries()  mongo.connect()  novo_funcionario = {      "id_func": 999,      "nome": "Fulano de Tal",      "cpf": "00000000000",      "cargo": "Analista de Teste"  }  mongo.db["funcionarios"].insert_one(novo_funcionario)  mongo.close()   `
+
+---
+## Solução de Problemas Comuns
+
+### Erro: Authentication failed (MongoDB)
+
+*   Verifique se o usuário e senha no arquivo authentication.mongo estão corretos.    
+*   Confirme se o banco configurado (por padrão, labdatabase) realmente existe e se o usuário tem permissão sobre ele.    
+*   Verifique se o MongoDB está rodando na porta 27017 em localhost (ou ajuste o host/porta em mongo\_queries.py).    
+
+### Erro: command listCollections requires authentication
+*   O servidor Mongo está exigindo autenticação, mas a conexão foi feita sem usuário/senha válidos.   
+*   Ajuste authentication.mongo e/ou a configuração de segurança do MongoDB.
+    
+---
+## Observações Finais
+
+*   Esta versão MongoDB reutiliza o mesmo domínio de negócio da C2 (Oracle), mas explora conceitos de **banco de dados NoSQL**, **coleções**, **documentos JSON** e **pipelines de agregação**.    
+*   O foco está tanto na **integração Python + MongoDB** quanto na **migração de dados** entre um banco relacional (Oracle) e um NoSQL (MongoDB), mantendo a consistência da aplicação de controle de ponto.
