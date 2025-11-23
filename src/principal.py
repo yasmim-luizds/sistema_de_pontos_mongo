@@ -6,7 +6,6 @@ from reports.relatorios import Relatorio
 from controller.controller_funcionario import Controller_Funcionario
 from controller.controller_marcacao import Controller_Marcacao
 
-# Instâncias globais (mesmo padrão do exemplo do professor)
 tela_inicial = SplashScreen()
 relatorio = Relatorio()
 ctrl_funcionario = Controller_Funcionario()
@@ -14,12 +13,6 @@ ctrl_marcacao = Controller_Marcacao()
 
 
 def reports(opcao_relatorio: int = 0):
-    """
-    Encaminha para o relatório escolhido.
-    1 - Funcionários
-    2 - Marcações detalhadas
-    3 - Marcações agrupadas por funcionário
-    """
     if opcao_relatorio == 1:
         relatorio.get_relatorio_funcionarios()
     elif opcao_relatorio == 2:
@@ -29,11 +22,6 @@ def reports(opcao_relatorio: int = 0):
 
 
 def inserir(opcao_inserir: int = 0):
-    """
-    Encaminha para a inserção da entidade escolhida.
-    1 - Marcação
-    2 - Funcionário
-    """
     if opcao_inserir == 1:  # Marcação
         ctrl_marcacao.inserir_marcacao()
     elif opcao_inserir == 2:  # Funcionário
@@ -41,11 +29,6 @@ def inserir(opcao_inserir: int = 0):
 
 
 def atualizar(opcao_atualizar: int = 0):
-    """
-    Encaminha para a atualização da entidade escolhida.
-    1 - Marcação
-    2 - Funcionário
-    """
     if opcao_atualizar == 1:  # Marcação
         relatorio.get_relatorio_marcacao()
         ctrl_marcacao.atualizar_marcacao()
@@ -55,11 +38,6 @@ def atualizar(opcao_atualizar: int = 0):
 
 
 def excluir(opcao_excluir: int = 0):
-    """
-    Encaminha para a exclusão da entidade escolhida.
-    1 - Marcação
-    2 - Funcionário
-    """
     if opcao_excluir == 1:  # Marcação
         relatorio.get_relatorio_marcacao()
         ctrl_marcacao.excluir_marcacao()
@@ -69,7 +47,6 @@ def excluir(opcao_excluir: int = 0):
 
 
 def run():
-    # Splash inicial
     print(tela_inicial.get_updated_screen())
     config.clear_console()
 

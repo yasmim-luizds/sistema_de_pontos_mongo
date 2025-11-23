@@ -1,5 +1,3 @@
-# utils/config.py
-
 MENU_PRINCIPAL = """Menu Principal
 1 - Relatórios
 2 - Inserir Registros

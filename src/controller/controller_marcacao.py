@@ -8,14 +8,6 @@ class Controller_Marcacao:
         self.mongo = MongoQueries()
 
     def _resolve_funcionario(self, entrada: str) -> int | None:
-        """
-        Recebe um texto digitado pelo usuário.
-        - Se for número, trata como ID e valida existência.
-        - Se for nome, busca por nome (LIKE, case-insensitive).
-          - 0 registros: avisa e retorna None
-          - 1 registro: retorna o ID
-          - >1 registros: lista opções e pede ID exato
-        """
         entrada = entrada.strip()
         if entrada.isdigit():
             id_func = int(entrada)

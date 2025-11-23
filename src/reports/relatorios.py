@@ -1,5 +1,3 @@
-# reports/relatorios.py
-
 from conexion.mongo_queries import MongoQueries
 import pandas as pd
 from pymongo import ASCENDING
@@ -7,15 +5,9 @@ from pymongo import ASCENDING
 
 class Relatorio:
     def __init__(self):
-        # Sem carregar SQL, tudo vai ser feito via agregações Mongo
         pass
 
     def get_relatorio_funcionarios(self):
-        """
-        Lista todos os funcionários (id, nome, cpf, cargo),
-        ordenados por nome.
-        Equivalente ao relatorio_funcionarios.sql.
-        """
         mongo = MongoQueries()
         mongo.connect()
 
@@ -42,13 +34,6 @@ class Relatorio:
         input("Pressione Enter para Sair do Relatório de Funcionários")
 
     def get_relatorio_marcacao(self):
-        """
-        Lista as marcações de ponto detalhadas, já com dados do funcionário
-        (join entre coleções 'marcacoes' e 'funcionarios').
-
-        Equivalente ao relatorio_marcacoes.sql, mas agora em Mongo,
-        e já atende o requisito de 'junção de coleções' do edital.
-        """
         mongo = MongoQueries()
         mongo.connect()
 
@@ -102,13 +87,6 @@ class Relatorio:
         input("Pressione Enter para Sair do Relatório de Marcações de Ponto")
 
     def get_relatorio_pontos_funcionarios(self):
-        """
-        Agrupa marcações por funcionário, contando quantas marcações cada um possui.
-        Isso atende o requisito de 'relatório com sumarização/agrupamento' do edital.
-
-        Equivalente ao relatorio_marcacoes_funcionarios.sql (ideia geral),
-        mas usando aggregate do Mongo.
-        """
         mongo = MongoQueries()
         mongo.connect()
 

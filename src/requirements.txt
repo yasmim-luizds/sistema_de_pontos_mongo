@@ -1,4 +1,4 @@
 cx-Oracle==8.3.0
-pandas==1.4.4
-numpy==1.23.2
-pymongo==4.2.0
+pandas==2.3.3
+numpy==2.3.5
+pymongo==4.15.4

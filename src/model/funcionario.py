@@ -35,8 +35,8 @@ class Funcionario:
         self.__cargo = cargo
 
     def validar_cpf(self, cpf: str) -> bool:
-        if len(cpf) != 11 or cpf == cpf[0] * 11: # sequências repetidas não são válidas (ex: 111.111.111-11)
-            return False
+        #if len(cpf) != 11 or cpf == cpf[0] * 11: # sequências repetidas não são válidas (ex: 111.111.111-11)
+            #return False
         for i in range(9, 11): # valida os dois dígitos verificadores (numeros finais do cpf) e garante que o cpf é válido
             soma = sum(int(cpf[num]) * ((i + 1) - num) for num in range(0, i)) # soma ponderada dos dígitos para cálculo do dígito verificador
             digito = ((soma * 10) % 11) % 10 # cálculo do dígito verificador
