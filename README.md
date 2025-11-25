@@ -9,7 +9,9 @@
 **Última atualização:** Novembro/2025
 
 **Integrantes:** Hellen Karla Costa, Júlia Ogassavara, Yasmim Luiz
+
 **Turma:** 4SC1
+
 **Vídeo de Apresentação:** https://www.youtube.com/watch?v=1ww08wVKLtQ
 
 ---
