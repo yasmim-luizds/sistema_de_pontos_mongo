@@ -127,49 +127,51 @@ class Controller_Marcacao:
     def atualizar_marcacao(self) -> Marcacao | None:
         self.mongo.connect()
 
-        id_marc = int(input("ID da Marcação (período) que irá alterar: "))
+        try:
+            id_marc = int(input("ID da Marcação (período) que irá alterar: "))
+        except ValueError:
+            print("Entrada inválida.")
+            return None
 
+        # Aqui: True = NÃO existe
         if self.verifica_existencia_marcacao(id_marc):
-            nova_data = input("Nova Data (DD-MM-YYYY): ").strip()
-            nova_hora_ent = input("Nova Hora de ENTRADA (HH:MM): ").strip()
-            nova_hora_sai = input("Nova Hora de SAÍDA (HH:MM): ").strip()
-
-            # Atualiza a marcação no MongoDB
-            self.mongo.db["marcacoes"].update_one(
-                {"id_marc": id_marc},
-                {
-                    "$set": {
-                        "data_marc": nova_data,
-                        "hora_entrada": nova_hora_ent,
-                        "hora_saida": nova_hora_sai
-                    }
-                }
-            )
-
-            df = self.mongo.db["marcacoes"].find_one({"id_marc": id_marc})
-
-            marc_E = Marcacao(
-                id_marc=df["id_marc"],
-                id_func=df["id_func"],
-                data_marc=df["data_marc"],
-                hora_marc=df["hora_entrada"],
-                tipo="E"
-            )
-            marc_S = Marcacao(
-                id_marc=df["id_marc"],
-                id_func=df["id_func"],
-                data_marc=df["data_marc"],
-                hora_marc=df["hora_saida"],
-                tipo="S"
-            )
-
-            print("Período atualizado com sucesso!")
-            print("  ", marc_E.to_string())
-            print("  ", marc_S.to_string())
-            return marc_E
-        else:
             print(f"O ID da marcação {id_marc} não existe.")
             return None
+
+        nova_data     = input("Nova Data (DD-MM-YYYY): ").strip()
+        nova_hora_ent = input("Nova Hora de ENTRADA (HH:MM): ").strip()
+        nova_hora_sai = input("Nova Hora de SAÍDA   (HH:MM): ").strip()
+
+        self.mongo.db["marcacoes"].update_one(
+            {"id_marc": id_marc},
+            {"$set": {
+                "data_marc": nova_data,
+                "hora_entrada": nova_hora_ent,
+                "hora_saida": nova_hora_sai
+            }}
+        )
+
+        doc = self.mongo.db["marcacoes"].find_one({"id_marc": id_marc})
+
+        marc_E = Marcacao(
+            id_marc=doc["id_marc"],
+            id_func=doc["id_func"],
+            data_marc=doc["data_marc"],
+            hora_marc=doc["hora_entrada"],
+            tipo="E"
+        )
+        marc_S = Marcacao(
+            id_marc=doc["id_marc"],
+            id_func=doc["id_func"],
+            data_marc=doc["data_marc"],
+            hora_marc=doc["hora_saida"],
+            tipo="S"
+        )
+
+        print("Período atualizado com sucesso!")
+        print("  ", marc_E.to_string())
+        print("  ", marc_S.to_string())
+        return marc_E
 
     def excluir_marcacao(self) -> None:
         self.mongo.connect()
@@ -180,42 +182,55 @@ class Controller_Marcacao:
             print("Entrada inválida.")
             return
 
-        if not self.verifica_existencia_marcacao(id_marc):
-            # Recupera os dados da marcação que será excluída
-            df = self.mongo.db["marcacoes"].find_one({"id_marc": id_marc})
+        # True = NÃO existe
+        if self.verifica_existencia_marcacao(id_marc):
+            print(f"O id_marc {id_marc} não existe.")
+            return
 
-            # Apaga a marcação do MongoDB
-            self.mongo.db["marcacoes"].delete_one({"id_marc": id_marc})
+        doc = self.mongo.db["marcacoes"].find_one({"id_marc": id_marc})
 
-            marc_E = Marcacao(
-                id_marc=df["id_marc"],
-                id_func=df["id_func"],
-                data_marc=df["data_marc"],
-                hora_marc=df["hora_entrada"],
-                tipo="E"
+        if not doc:
+            print(f"O id_marc {id_marc} não foi encontrado no banco.")
+            return
+
+        self.mongo.db["marcacoes"].delete_one({"id_marc": id_marc})
+
+        marc_E = Marcacao(
+            id_marc=doc["id_marc"],
+            id_func=doc["id_func"],
+            data_marc=doc["data_marc"],
+            hora_marc=doc["hora_entrada"],
+            tipo="E"
+        )
+
+        print("Período removido com sucesso!")
+        print("  ", marc_E.to_string())
+
+        hora_sai = doc.get("hora_saida")
+        if hora_sai:
+            marc_S = Marcacao(
+                id_marc=doc["id_marc"],
+                id_func=doc["id_func"],
+                data_marc=doc["data_marc"],
+                hora_marc=hora_sai,
+                tipo="S"
             )
-
-            print("Período removido com sucesso!")
-            print("  ", marc_E.to_string())
-
-            # Só imprime a SAÍDA se houver hora
-            hora_sai = df["hora_saida"]
-            if hora_sai:
-                marc_S = Marcacao(
-                    id_marc=df["id_marc"],
-                    id_func=df["id_func"],
-                    data_marc=df["data_marc"],
-                    hora_marc=hora_sai,
-                    tipo="S"
-                )
-                print("  ", marc_S.to_string())
-            else:
-                print("  (sem saída registrada)")
+            print("  ", marc_S.to_string())
         else:
-            print(f"O ID da marcação {id_marc} não existe.")
+            print("  (sem saída registrada)")
 
     def verifica_existencia_marcacao(self, id_marc: int) -> bool:
+        """
+        Retorna True se a marcação NÃO existe.
+        Retorna False se a marcação existe.
+        """
         return self.mongo.db["marcacoes"].count_documents({"id_marc": id_marc}) == 0
 
     def verifica_existencia_funcionario(self, id_func: int) -> bool:
+        """
+        Retorna True se o funcionário NÃO existe.
+        Retorna False se o funcionário existe.
+        """
         return self.mongo.db["funcionarios"].count_documents({"id_func": id_func}) == 0
+
+
