@@ -21,8 +21,16 @@ class Controller_Funcionario:
 
         # Verifica se já existe funcionário com esse CPF
         if self.verifica_existencia_cpf(cpf):
-            # Calcula o próximo id_func disponível
-            proximo_id = self.mongo.db["funcionarios"].count_documents({}) + 1 
+            # Busca o MAIOR id_func já existente e soma 1
+            ultimo = self.mongo.db["funcionarios"].find_one(
+                {},                      # qualquer documento
+                sort=[("id_func", -1)]   # ordena por id_func desc
+            )
+
+            if ultimo is None:
+                proximo_id = 1
+            else:
+                proximo_id = int(ultimo.get("id_func", 0)) + 1
 
             # Monta o documento para inserir
             data = dict(
